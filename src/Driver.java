@@ -19,6 +19,7 @@ public class Driver {
 
     public static void analyseDirectory(File directory) {
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
+        GenericVisitor<Integer, List<ClassMetricsResult>> WMC_complex = new WMC_complex();
         File outputFile = new File("output.csv");
 
         try(FileWriter output = new FileWriter(outputFile)) {
@@ -26,7 +27,7 @@ public class Driver {
 
             for(File subDirectory : directory.listFiles()) {
                 writeAndPrint(output, subDirectory.getName()+"\n");
-                writeAndPrint(output, "Class Name,WCM,RFC,CBO,LCOM\n");
+                writeAndPrint(output, "Class Name,WCM,WCM_C,RFC,CBO,LCOM\n");
 
                 List<ClassMetricsResult> resultMap = new ArrayList<>();
 
@@ -46,6 +47,7 @@ public class Driver {
 
                         WMCVisitor.visit(cu, resultMap);
                         WMCVisitor.visit(cu, resultMap);
+                        WMC_complex.visit(cu, resultMap);
                     }
 
 
