@@ -3,6 +3,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 public class ClassMetricsResult {
     private final ClassOrInterfaceDeclaration coid;
     private int wcm;
+    private int wcm_c; 
     private int rfc;
     private int cbo;
     private int lcom;
@@ -10,6 +11,7 @@ public class ClassMetricsResult {
     public ClassMetricsResult(ClassOrInterfaceDeclaration coid) {
         this.coid = coid;
         this.wcm = 0;
+        this.wcm_c = 0; 
         this.rfc = 0;
         this.cbo = 0;
         this.lcom = 0;
@@ -23,6 +25,10 @@ public class ClassMetricsResult {
         return this.wcm;
     }
 
+    public int getWcm_c() {
+        return this.wcm_c;
+    }
+    
     public int getRfc() {
         return this.rfc;
     }
@@ -36,6 +42,10 @@ public class ClassMetricsResult {
     public void setWcm(int wcm) {
         this.wcm = wcm;
     }
+    
+    public void setWcm_c(int wcm_c) {
+        this.wcm_c = wcm_c;
+    }
 
     public void setRfc(int rfc) {
         this.rfc = rfc;
@@ -48,6 +58,6 @@ public class ClassMetricsResult {
     }
 
     public String toCSVString() {
-        return coid.getNameAsString() + "," + wcm + "," + rfc + "," + cbo + "," + lcom + "\n";
+        return coid.getNameAsString() + "," + wcm + "," + wcm_c + "," + rfc + "," + cbo + "," + lcom + "\n";
     }
 }
