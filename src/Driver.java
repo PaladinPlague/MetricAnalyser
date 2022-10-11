@@ -1,5 +1,12 @@
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.BodyDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.visitor.GenericVisitor;
 
 import java.io.File;
@@ -7,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class Driver {
     private static final String DIRECTORY = "CS409TestSystem2022";
@@ -18,7 +26,10 @@ public class Driver {
     }
 
     public static void analyseDirectory(File directory) {
+        //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
+        GenericVisitor<Set<NameExpr>, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
+
         File outputFile = new File("output.csv");
 
         try(FileWriter output = new FileWriter(outputFile)) {
@@ -44,8 +55,26 @@ public class Driver {
                     if(extension.equals("java")) {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
 
-                        WMCVisitor.visit(cu, resultMap);
-                        WMCVisitor.visit(cu, resultMap);
+//                        NodeList<TypeDeclaration<?>> classes = cu.getTypes();
+//
+//
+//                        NodeList<BodyDeclaration<?>> members = classes.get(0).getMembers();
+//
+//                        for(BodyDeclaration<?> b : members) {
+//                            if(b.isMethodDeclaration() && b.asMethodDeclaration().getName().toString().equals("setDead")) {
+//                                BlockStmt bs = b.asMethodDeclaration().getBody().get().asBlockStmt();
+//                                ExpressionStmt es = bs.getStatements().get(0).asExpressionStmt();
+//                                es.getExpression().asAssignExpr().getTarget().asNameExpr().resolve();
+//                            }
+//                        }
+
+                        Set<NameExpr> r = LCOMVisitor.visit(cu, resultMap);
+                        System.out.println(r.toArray().toString());
+
+
+
+                        //WMCVisitor.visit(cu, resultMap);
+//                        WMCVisitor.visit(cu, resultMap);
                     }
 
 
