@@ -4,5 +4,5 @@ import com.github.javaparser.ast.expr.NameExpr;
 import java.util.Map;
 import java.util.Set;
 
-public interface ILCOMMap extends Map<MethodDeclaration, Set<String>> {
+public interface ILCOMMap extends Map<MethodDeclaration, Set<VariableUse>> {
 }

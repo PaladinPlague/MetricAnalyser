@@ -12,6 +12,28 @@
 //import java.util.Map;
 //import java.util.Set;
 //
+//public class LCOMVisitorOld {
+//  private int foo = 1;
+//
+//  public void myMethodA(int foo) {
+//    System.out.println(foo);
+//  }
+//
+//  public void myMethodB(int foo) {
+//    System.out.println(this.foo);
+//  }
+//
+//  class in {
+//    private String foo;
+//    public in() {
+//      string blah = foo+ "";
+//    }
+//  }
+//
+//}
+
+
+
 //public class LCOMVisitorOld extends GenericVisitorAdapter<LCOMReturnType, List<ClassMetricsResult>> {
 //  @Override
 //  public LCOMReturnType visit(CompilationUnit cu, List<ClassMetricsResult> arg) {

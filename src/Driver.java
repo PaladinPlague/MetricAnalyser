@@ -19,13 +19,11 @@ public class Driver {
     public static void analyseDirectory(File directory) {
         //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
-        //GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitorOld();
+        GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
 
         File outputFile = new File("output.csv");
 
         try(FileWriter output = new FileWriter(outputFile)) {
-
-
             for(File subDirectory : directory.listFiles()) {
                 writeAndPrint(output, subDirectory.getName()+"\n");
                 writeAndPrint(output, "Class Name,WCM,RFC,CBO,LCOM\n");
@@ -33,19 +31,8 @@ public class Driver {
                 List<ClassMetricsResult> resultMap = new ArrayList<>();
 
                 for(File f : subDirectory.listFiles()) {
-
-
-                    String extension = "";
-                    String fileName = f.getName();
-
-                    int i = fileName.lastIndexOf('.');
-                    if (i > 0) {
-                        extension = fileName.substring(i+1);
-                    }
-
-                    if(extension.equals("java")) {
+                    if(f.getName().endsWith(".java")) {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
-
 //                        NodeList<TypeDeclaration<?>> classes = cu.getTypes();
 //
 //
@@ -58,19 +45,23 @@ public class Driver {
 //                                es.getExpression().asAssignExpr().getTarget().asNameExpr().resolve();
 //                            }
 //                        }
-
-                        //LCOMReturnType r = LCOMVisitor.visit(cu, resultMap);
-                        //System.out.println(r.toArray().toString());
-
-
-
+//                        if(cu.getTypes().get(0).getNameAsString().equals("Field")) {
+//                            LCOMReturnType r = LCOMVisitor.visit(cu, resultMap);
+//                            int i = 1;
+//                        }
 
 
 
 
 
 
-                        //WMCVisitor.visit(cu, resultMap);
+
+
+
+
+
+
+                        WMCVisitor.visit(cu, resultMap);
 //                        WMCVisitor.visit(cu, resultMap);
                     }
 

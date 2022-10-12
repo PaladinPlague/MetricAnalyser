@@ -5,9 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class LCOMMap extends HashMap<MethodDeclaration, Set<String>> implements ILCOMMap {
-  public LCOMMap(Map<MethodDeclaration, Set<String>> newMap) {
+public class LCOMMap extends HashMap<MethodDeclaration, Set<VariableUse>> implements ILCOMMap {
+  public LCOMMap(Map<MethodDeclaration, Set<VariableUse>> newMap) {
     super(newMap);
+  }
+
+  public LCOMMap() {
+    super();
   }
 
 }
