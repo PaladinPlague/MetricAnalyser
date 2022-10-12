@@ -1,25 +1,11 @@
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.BodyDeclaration;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.TypeDeclaration;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.ExpressionStmt;
-import com.github.javaparser.ast.stmt.ForStmt;
-import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.visitor.GenericVisitor;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class Driver {
     private static final String DIRECTORY = "CS409TestSystem2022";
@@ -33,7 +19,7 @@ public class Driver {
     public static void analyseDirectory(File directory) {
         //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
-        GenericVisitor<Set<NameExpr>, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
+        //GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitorOld();
 
         File outputFile = new File("output.csv");
 
@@ -73,8 +59,8 @@ public class Driver {
 //                            }
 //                        }
 
-                        Set<NameExpr> r = LCOMVisitor.visit(cu, resultMap);
-                        System.out.println(r.toArray().toString());
+                        //LCOMReturnType r = LCOMVisitor.visit(cu, resultMap);
+                        //System.out.println(r.toArray().toString());
 
 
 
