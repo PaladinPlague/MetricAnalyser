@@ -1,10 +1,12 @@
+import com.github.javaparser.JavaToken;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.expr.SimpleName;
+import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.visitor.GenericVisitor;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.*;
 
 public class Driver {
@@ -28,26 +30,15 @@ public class Driver {
                 writeAndPrint(output, subDirectory.getName()+"\n");
                 writeAndPrint(output, "Class Name,WCM,RFC,CBO,LCOM\n");
 
-                List<ClassMetricsResult> resultMap = new ArrayList<>();
+                List<ClassMetricsResult> resultList = new ArrayList<>();
 
                 for(File f : subDirectory.listFiles()) {
                     if(f.getName().endsWith(".java")) {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
-//                        NodeList<TypeDeclaration<?>> classes = cu.getTypes();
-//
-//
-//                        NodeList<BodyDeclaration<?>> members = classes.get(0).getMembers();
-//
-//                        for(BodyDeclaration<?> b : members) {
-//                            if(b.isMethodDeclaration() && b.asMethodDeclaration().getName().toString().equals("setDead")) {
-//                                BlockStmt bs = b.asMethodDeclaration().getBody().get().asBlockStmt();
-//                                ExpressionStmt es = bs.getStatements().get(0).asExpressionStmt();
-//                                es.getExpression().asAssignExpr().getTarget().asNameExpr().resolve();
-//                            }
-//                        }
-//                        if(cu.getTypes().get(0).getNameAsString().equals("Field")) {
-//                            LCOMReturnType r = LCOMVisitor.visit(cu, resultMap);
-//                            int i = 1;
+
+//                        if(cu.getType(0).getNameAsString().equals("GridView")) {
+                            LCOMVisitor.visit(cu, resultList);
+
 //                        }
 
 
@@ -61,19 +52,19 @@ public class Driver {
 
 
 
-                        WMCVisitor.visit(cu, resultMap);
+                        //WMCVisitor.visit(cu, resultList);
 //                        WMCVisitor.visit(cu, resultMap);
                     }
 
 
                 }
-                for(ClassMetricsResult cmr : resultMap) {
+                for(ClassMetricsResult cmr : resultList) {
                     writeAndPrint(output, cmr.toCSVString());
                 }
                 writeAndPrint(output, "\n");
             }
         } catch (Exception e) {
-            System.out.println("Failed to read directory");
+            System.out.println(e.getMessage());
         }
     }
 

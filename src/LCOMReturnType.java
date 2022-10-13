@@ -1,7 +1,9 @@
 import com.github.javaparser.ast.body.MethodDeclaration;
+import jdk.jshell.spi.ExecutionControl;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.management.openmbean.InvalidOpenTypeException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 public class LCOMReturnType {
     private LCOMReturnEnum dataType;
@@ -51,6 +53,20 @@ public class LCOMReturnType {
         this.dataType = LCOMReturnEnum.STATEMENT_LEVEL;
     }
 
+    private Set<String> localVars;
+
+    public Set<String> getLocalVars() {
+        return localVars;
+    }
+
+    public void setLocalVars(Set<String> localVars) {
+        this.localVars = localVars;
+    }
+
+    public void resetLocalVars() {
+        setLocalVars(null);
+    }
+
     private MethodDeclaration md;
 
     //Method level
@@ -66,11 +82,11 @@ public class LCOMReturnType {
     }
 
     private ILCOMMap ilm;
-    private Set<VariableUse> fieldNameSet;
+    private Set<String> fieldNameSet;
 
     //Class level
     //ILCOMMap and Set<String> (field names)
-    public LCOMReturnType(ILCOMMap ilm, Set<VariableUse> fieldNameSet) {
+    public LCOMReturnType(ILCOMMap ilm, Set<String> fieldNameSet) {
         this.ilm = ilm;
         this.fieldNameSet = fieldNameSet;
         this.dataType = LCOMReturnEnum.CLASS_LEVEL;
@@ -80,48 +96,47 @@ public class LCOMReturnType {
         return ilm;
     }
 
-    public Set<VariableUse> getFieldNameSet() {
+    public Set<String> getFieldNameSet() {
         return this.fieldNameSet;
     }
 
     public LCOMReturnType aggregate(LCOMReturnType that) {
-        if(this.isEmpty) {
-            return that;
+        LCOMReturnType emptyResult = aggregateEmpty(that);
+        if(emptyResult != null) {
+            return emptyResult;
         }
 
         // At the class level we will be aggregating (inner) classes and methods
         if (this.dataType == LCOMReturnEnum.CLASS_LEVEL) {
             if (that.getDataType() == LCOMReturnEnum.CLASS_LEVEL) {
-                ILCOMMap newMap = this.getLCOMMap() != null ? new LCOMMap(this.getLCOMMap()) : new LCOMMap();
+                ILCOMMap newMap = new LCOMMap(this.getLCOMMap());
                 newMap.putAll(that.getLCOMMap());
 
-                Set<VariableUse> newSet = this.fieldNameSet != null ? new HashSet<>(this.fieldNameSet) : new HashSet<>();
+                Set<String> newSet = new HashSet<>(this.fieldNameSet);
                 newSet.addAll(that.getFieldNameSet());
 
                 return new LCOMReturnType(newMap, newSet);
             }
 
             if (that.getDataType() == LCOMReturnEnum.METHOD_LEVEL) {
-                ILCOMMap newMap = this.getLCOMMap() != null ? new LCOMMap(this.getLCOMMap()) : new LCOMMap();
+                ILCOMMap newMap = new LCOMMap(this.getLCOMMap());
                 newMap.put(that.getMethodDeclaration(), that.getNameSet());
 
                 return new LCOMReturnType(newMap, this.fieldNameSet);
             }
-
-            return null;
         }
 
         // At the method level we will be aggregating with other methods to produce a pseudo-class level
         // return type which is just an aggregation of methods without any fields,
         // this can be used to construct the actual class level type when we are at the class level
         if (this.dataType == LCOMReturnEnum.METHOD_LEVEL) {
-            ILCOMMap newMap = new LCOMMap();
+            ILCOMMap newMap = new LCOMMap(new HashMap<>());
             newMap.put(this.md, this.nameSet);
 
 
             if (that.getDataType() == LCOMReturnEnum.METHOD_LEVEL) {
                 newMap.put(that.getMethodDeclaration(), that.getNameSet());
-                return new LCOMReturnType(newMap, null);
+                return new LCOMReturnType(newMap, new HashSet<>());
             }
         }
 
@@ -130,17 +145,17 @@ public class LCOMReturnType {
             Set<VariableUse> newSet = this.nameSet != null ? new HashSet<>(this.nameSet) : new HashSet<>();
 
             if (that.getDataType() == LCOMReturnEnum.STATEMENT_LEVEL) {
-                newSet.addAll(that.getNameSet());
+                newSet.addAll(VariableUse.removeVarsFromSet(this.getLocalVars(), that.getNameSet()));
                 return new LCOMReturnType(newSet);
             }
 
             if (that.getDataType() == LCOMReturnEnum.NAME_LEVEL) {
-                newSet.addAll(that.getNameSet());
+                newSet.addAll(VariableUse.removeVarsFromSet(this.getLocalVars(), that.getNameSet()));
                 return new LCOMReturnType(newSet);
             }
         }
 
-        //At the name level we are aggregating with another name to produce a statement level result
+        //At the name level we are aggregating with another name, or a statement to produce a statement level result
         if (this.dataType == LCOMReturnEnum.NAME_LEVEL) {
             Set<VariableUse> newSet = this.nameSet != null ? new HashSet<>(this.nameSet) : new HashSet<>();
 
@@ -150,18 +165,92 @@ public class LCOMReturnType {
             }
         }
 
+        return null;
+    }
+
+    private LCOMReturnType aggregateEmpty(LCOMReturnType that) {
+        if(this.isEmpty) {
+            // always convert name level to statement level on aggregation with anything, even empty return type
+            if(that.getDataType() == LCOMReturnEnum.NAME_LEVEL) {
+                return new LCOMReturnType(that.getNameSet());
+            }
+
+            // always convert a method level to a class class on aggregation
+            if(that.getDataType() == LCOMReturnEnum.METHOD_LEVEL) {
+                ILCOMMap newMap = new LCOMMap();
+                newMap.put(that.getMethodDeclaration(), that.getNameSet());
+                return new LCOMReturnType(newMap, new HashSet<>());
+            }
+
+            return that;
+        }
+
+        if(that.isEmpty) {
+            // always convert name level to statement level on aggregation with anything, even empty return type
+            if(this.dataType == LCOMReturnEnum.NAME_LEVEL) {
+                return new LCOMReturnType(this.getNameSet());
+            }
+
+            return this;
+        }
 
         return null;
     }
 
-    public static Set<String> convertVarUseSetToStrings(Set<VariableUse> s) {
-        Set<String> output = new HashSet<>();
-        for(VariableUse vu:  s) {
-            output.add(vu.getVarName());
+    public LCOMReturnType reduceMapsToFields() {
+        if(this.isEmpty || this.dataType != LCOMReturnEnum.CLASS_LEVEL) {
+            throw new IllegalStateException();
         }
 
-        return output;
+        if(this.fieldNameSet.size() == 0) {
+            throw new UnsupportedOperationException("Not sure yet what to do with classes with no fields");
+        }
+
+        ILCOMMap reducedMap = new LCOMMap();
+
+        for(MethodDeclaration md : ilm.keySet()) {
+            reducedMap.put(md, VariableUse.keepVarsFromSet(fieldNameSet,ilm.get(md)));
+        }
+
+        return new LCOMReturnType(reducedMap, fieldNameSet);
     }
 
+    public int calculateLCOM() {
+        if(this.isEmpty || this.dataType != LCOMReturnEnum.CLASS_LEVEL) {
+            throw new IllegalStateException();
+        }
 
+        int LCOM = 0;
+
+        List<Set<String>> allVarsForMethods = new ArrayList<>();
+
+        for(Set<VariableUse> vuSet : this.ilm.values()) {
+            Set<String> stringSet = VariableUse.convertVarUseSetToStrings(vuSet);
+
+            allVarsForMethods.add(stringSet);
+        }
+
+        for(int i = 0; i<allVarsForMethods.size(); i++) {
+            Set<String> leftInPair = allVarsForMethods.get(i);
+
+            // only need to iterate through methods after the current one
+            for(int j=i+1; j< allVarsForMethods.size(); j++) {
+                Set<String> rightInPair = allVarsForMethods.get(j);
+
+                if(leftInPair.size() == 0 && rightInPair.size() == 0) {
+                    // two methods which both use no variables are cohesive
+                    LCOM -= 1;
+                } else {
+                    // Set intersection
+                    Set<String> sharedVars = new HashSet<>(leftInPair);
+                    sharedVars.retainAll(rightInPair);
+
+                    LCOM += sharedVars.size() == 0 ? 1 : -1 ;
+                }
+            }
+        }
+
+        // Return LCOM, or 0 if it was negative
+        return Math.max(LCOM, 0);
+    }
 }
