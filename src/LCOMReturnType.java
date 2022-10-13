@@ -146,12 +146,16 @@ public class LCOMReturnType {
 
             if (that.getDataType() == LCOMReturnEnum.STATEMENT_LEVEL) {
                 newSet.addAll(VariableUse.removeVarsFromSet(this.getLocalVars(), that.getNameSet()));
-                return new LCOMReturnType(newSet);
+                LCOMReturnType toReturn = new LCOMReturnType(newSet);
+                toReturn.setLocalVars(this.getLocalVars());
+                return toReturn;
             }
 
             if (that.getDataType() == LCOMReturnEnum.NAME_LEVEL) {
                 newSet.addAll(VariableUse.removeVarsFromSet(this.getLocalVars(), that.getNameSet()));
-                return new LCOMReturnType(newSet);
+                LCOMReturnType toReturn = new LCOMReturnType(newSet);
+                toReturn.setLocalVars(this.getLocalVars());
+                return toReturn;
             }
         }
 
