@@ -7,6 +7,9 @@ import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetricsResult>> {
@@ -40,21 +43,54 @@ public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetric
         for(IfStmt ifStmt: md.getChildNodesByType(IfStmt.class)) {
         	value ++; 
         	Expression condExpr = ifStmt.getCondition();
-        	System.out.println(condExpr + " : " + condExpr.isConditionalExpr());
-        	if (condExpr.isConditionalExpr()) {
-        		value ++; 
-        	}
-        	if (ifStmt.getElseStmt().isPresent()) {
-                Statement elseStmt = ifStmt.getElseStmt().get();
-                if (elseStmt instanceof IfStmt) {
-                } else {
-                    value++;
-                }
-            }
         }
         return value;
     }
-
+	
+	@Override 
+	public Integer visit(IfStmt n, List<ClassMetricsResult> arg) {
+		int total = 0;
+		Integer result;
+		
+		result = n.getCondition().accept(this, arg);
+		if(result != null) {
+			total += result; 
+		}
+		
+		if(n.getElseStmt().isPresent()) {
+			result = n.getElseStmt().get().accept(this, arg);
+			if(result != null) {
+				total += result; 
+			}
+		}
+		
+		result = n.getThenStmt().accept(this, arg);
+		if(result != null) {
+			total += result; 
+		}
+		
+		return total; 
+	}
+	
+	@Override
+	public Integer visit(BinaryExpr n, List<ClassMetricsResult> arg) {
+		int total = 0; 
+		total += n.getLeft().accept(this, arg);
+		total += n.getRight().accept(this, arg);
+		
+		List<BinaryExpr.Operator> operators = Arrays.asList(BinaryExpr.Operator.AND,
+																	BinaryExpr.Operator.OR,
+																	BinaryExpr.Operator.BINARY_AND,
+																	BinaryExpr.Operator.BINARY_OR); 		
+		for(int i = 0; i < operators.size(); i++) {
+			if(n.getOperator().equals(operators.get(i))) {
+				total ++; 
+			}
+		}
+		
+		return total; 
+	}
+	
     @Override
     public Integer visit(NodeList n, List<ClassMetricsResult> arg) {
         int total = 0;
