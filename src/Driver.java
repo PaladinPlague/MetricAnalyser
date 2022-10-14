@@ -45,8 +45,8 @@ public class Driver {
                     if(extension.equals("java")) {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
 
-                        WMCVisitor.visit(cu, resultMap);
-                        WMCVisitor.visit(cu, resultMap);
+//                        WMCVisitor.visit(cu, resultMap);
+//                        WMCVisitor.visit(cu, resultMap);
                         WMC_complex.visit(cu, resultMap);
                     }
 

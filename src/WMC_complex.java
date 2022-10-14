@@ -15,7 +15,10 @@ import java.util.List;
 public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetricsResult>> {
 
     public Integer visit(ClassOrInterfaceDeclaration coid, List<ClassMetricsResult> arg) {
-        int result = super.visit(coid, arg);
+		int total = 0;
+		Integer result;
+
+        result = super.visit(coid, arg);
 
         int foundIndex = -1;
         for(int i=0; i<arg.size(); i++) {
@@ -33,19 +36,19 @@ public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetric
 
         arg.get(foundIndex).setWcm_c(result);
 
-        return !coid.isInnerClass() ? result : 0;
+        return result;
     }
 
-	@Override
-    public Integer visit(MethodDeclaration md, List<ClassMetricsResult> arg) {
-        super.visit(md, arg);
-        int value = 1;
-        for(IfStmt ifStmt: md.getChildNodesByType(IfStmt.class)) {
-        	value ++; 
-        	Expression condExpr = ifStmt.getCondition();
-        }
-        return value;
-    }
+//	@Override
+//    public Integer visit(MethodDeclaration md, List<ClassMetricsResult> arg) {
+//        super.visit(md, arg);
+//        int value = 1;
+//        for(IfStmt ifStmt: md.getChildNodesByType(IfStmt.class)) {
+//        	value ++;
+//        	Expression condExpr = ifStmt.getCondition();
+//        }
+//        return value;
+//    }
 	
 	@Override 
 	public Integer visit(IfStmt n, List<ClassMetricsResult> arg) {
@@ -74,17 +77,25 @@ public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetric
 	
 	@Override
 	public Integer visit(BinaryExpr n, List<ClassMetricsResult> arg) {
-		int total = 0; 
-		total += n.getLeft().accept(this, arg);
-		total += n.getRight().accept(this, arg);
+		int total = 0;
+		Integer result;
+
+		result = n.getLeft().accept(this, arg);
+		if(result != null) {
+			total += result;
+		}
+		result = n.getRight().accept(this, arg);
+		if(result != null) {
+			total += result;
+		}
 		
 		List<BinaryExpr.Operator> operators = Arrays.asList(BinaryExpr.Operator.AND,
 																	BinaryExpr.Operator.OR,
 																	BinaryExpr.Operator.BINARY_AND,
-																	BinaryExpr.Operator.BINARY_OR); 		
-		for(int i = 0; i < operators.size(); i++) {
-			if(n.getOperator().equals(operators.get(i))) {
-				total ++; 
+																	BinaryExpr.Operator.BINARY_OR);
+		for (BinaryExpr.Operator operator : operators) {
+			if (n.getOperator().equals(operator)) {
+				total++;
 			}
 		}
 		
