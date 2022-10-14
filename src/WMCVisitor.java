@@ -10,7 +10,7 @@ public class WMCVisitor extends GenericVisitorAdapter<Integer, List<ClassMetrics
     public Integer visit(ClassOrInterfaceDeclaration coid, List<ClassMetricsResult> arg) {
         int result = super.visit(coid, arg);
 
-        Utils.getOrCreateCMRInList(coid, arg).setWcm(result);
+        Utils.getOrCreateCMRInList(coid, arg).setWmc(result);
 
         return !coid.isInnerClass() ? result : 0;
     }

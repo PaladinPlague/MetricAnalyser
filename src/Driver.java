@@ -1,9 +1,5 @@
-import com.github.javaparser.JavaToken;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.expr.SimpleName;
-import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.visitor.GenericVisitor;
 
 import java.io.*;
@@ -32,7 +28,7 @@ public class Driver {
                 }
 
                 writeAndPrint(output, subDirectory.getName()+"\n");
-                writeAndPrint(output, "Class Name,WCM,RFC,CBO,LCOM\n");
+                writeAndPrint(output, "Class Name,WMC,RFC,CBO,LCOM\n");
 
                 List<ClassMetricsResult> resultList = new ArrayList<>();
 

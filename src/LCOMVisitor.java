@@ -1,16 +1,25 @@
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.*;
-import com.github.javaparser.ast.visitor.GenericVisitorAdapter;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("DuplicatedCode")
-public class LCOMVisitor extends GenericVisitorAdapter<LCOMReturnType, List<ClassMetricsResult>> {
+public class LCOMVisitor extends MetricVisitor<LCOMReturnType> {
+    protected LCOMReturnType initialiseEmpty() {
+        return LCOMReturnType.empty();
+    }
+
+    protected LCOMReturnType combineResults(LCOMReturnType first, LCOMReturnType second) {
+        return first.aggregate(second);
+    }
+    protected LCOMReturnType getReturn(LCOMReturnType possibleReturn) {
+        return possibleReturn.isNonEmpty() ? possibleReturn : null;
+    }
+
     @Override
     public LCOMReturnType visit(final ClassOrInterfaceDeclaration n, final List<ClassMetricsResult> arg) {
         if(n.isInterface()) {
@@ -49,7 +58,7 @@ public class LCOMVisitor extends GenericVisitorAdapter<LCOMReturnType, List<Clas
         Set<String> fieldNames = VariableUse.convertVarUseSetToStrings(fieldsReturn.getNameSet());
 
         // construct class level type
-        LCOMReturnType classType = new LCOMReturnType(methodsReturn.getLCOMMap(), fieldNames);
+        LCOMReturnType classType = new LCOMReturnType(methodsReturn.getTotalVariableUses(), fieldNames);
 
         // aggregate with inner classes
         for(ClassOrInterfaceDeclaration coid : innerClassesList) {
@@ -58,7 +67,7 @@ public class LCOMVisitor extends GenericVisitorAdapter<LCOMReturnType, List<Clas
 
         if(n.isTopLevelType()) {
             // Reduce maps and calculate LCOM, then add to arg
-            LCOMReturnType reduced = classType.reduceMapsToFields();
+            LCOMReturnType reduced = classType.reduceListToFields();
 
             ClassMetricsResult cmr = Utils.getOrCreateCMRInList(n, arg);
             cmr.setLcom(reduced.calculateLCOM());
@@ -72,7 +81,7 @@ public class LCOMVisitor extends GenericVisitorAdapter<LCOMReturnType, List<Clas
     public LCOMReturnType visit(final MethodDeclaration n, final List<ClassMetricsResult> arg) {
         if(n.getBody().isEmpty()) {
             //empty body does not use any fields
-            return new LCOMReturnType(n, new HashSet<>());
+            return new LCOMReturnType(new HashSet<>(), true);
         }
 
         Set<VariableUse> allVarsUsed;
@@ -87,7 +96,7 @@ public class LCOMVisitor extends GenericVisitorAdapter<LCOMReturnType, List<Clas
 
         Set<VariableUse> allVarsWithoutParameters = VariableUse.removeVarsFromSet(parameters, allVarsUsed);
 
-        return new LCOMReturnType(n, allVarsWithoutParameters);
+        return new LCOMReturnType(allVarsWithoutParameters, true);
     }
 
     @Override
@@ -124,7 +133,7 @@ public class LCOMVisitor extends GenericVisitorAdapter<LCOMReturnType, List<Clas
 
         // do not use empty - we do not want to lose our local variables when aggregating with the next statement
         // if the variable declarator initializers did not use any named variables
-        LCOMReturnType toReturn = new LCOMReturnType(new HashSet<>());
+        LCOMReturnType toReturn = new LCOMReturnType(new HashSet<>(), false);
         LCOMReturnType result;
 
         Set<String> localVarNames = new HashSet<>();
@@ -159,309 +168,5 @@ public class LCOMVisitor extends GenericVisitorAdapter<LCOMReturnType, List<Clas
     @Override
     public LCOMReturnType visit(final Parameter n, final List<ClassMetricsResult> arg) {
         return n.getName().accept(this, arg);
-    }
-
-    // All of the following visit overrides just make sure that all the parts of the relevant expressions
-    // are visited and the results are joined together
-
-
-    @Override
-    public LCOMReturnType visit(final ArrayAccessExpr n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getIndex().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getName().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final AssignExpr n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getTarget().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getValue().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final BinaryExpr n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getLeft().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getRight().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final ConditionalExpr n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getCondition().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getElseExpr().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getThenExpr().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final DoStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getCondition().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getBody().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final ForEachStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getVariable().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getIterable().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getBody().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final ForStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getInitialization().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        if (n.getCompare().isPresent()) {
-            result = n.getCompare().get().accept(this, arg);
-            if (result != null)
-                toReturn = toReturn.aggregate(result);
-        }
-
-        result = n.getUpdate().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getBody().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final IfStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getCondition().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getThenStmt().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        if (n.getElseStmt().isPresent()) {
-            result = n.getElseStmt().get().accept(this, arg);
-            if (result != null)
-                toReturn = toReturn.aggregate(result);
-        }
-
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final MethodCallExpr n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getArguments().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        if (n.getScope().isPresent()) {
-            result = n.getScope().get().accept(this, arg);
-            if (result != null)
-                toReturn = toReturn.aggregate(result);
-        }
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final ObjectCreationExpr n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        if (n.getAnonymousClassBody().isPresent()) {
-            result = n.getAnonymousClassBody().get().accept(this, arg);
-            if (result != null)
-                toReturn = toReturn.aggregate(result);
-        }
-
-        result = n.getArguments().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        if (n.getScope().isPresent()) {
-            result = n.getScope().get().accept(this, arg);
-            if (result != null)
-                toReturn = toReturn.aggregate(result);
-        }
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final SwitchEntry n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getLabels().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getStatements().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final SwitchStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getEntries().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getSelector().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final TryStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getCatchClauses().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        if (n.getFinallyBlock().isPresent()) {
-            result = n.getFinallyBlock().get().accept(this, arg);
-            if (result != null)
-                toReturn = toReturn.aggregate(result);
-        }
-
-        result = n.getResources().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-
-        result = n.getTryBlock().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final VariableDeclarator n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-        if (n.getInitializer().isPresent()) {
-            result = n.getInitializer().get().accept(this, arg);
-            if (result != null)
-                toReturn = toReturn.aggregate(result);
-        }
-
-        result = n.getName().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(final WhileStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-
-        result = n.getBody().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        result = n.getCondition().accept(this, arg);
-        if (result != null)
-            toReturn = toReturn.aggregate(result);
-
-        return toReturn.isNonEmpty() ? toReturn : null;
-    }
-
-    @Override
-    public LCOMReturnType visit(NodeList n, List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
-        LCOMReturnType result;
-        for (final Object v : n) {
-            result = ((Node) v).accept(this, arg);
-            if (result != null) {
-                toReturn = toReturn.aggregate(result);
-            }
-        }
-        return toReturn.isNonEmpty() ? toReturn : null;
     }
 }

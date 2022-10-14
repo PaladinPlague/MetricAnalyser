@@ -2,14 +2,14 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 
 public class ClassMetricsResult {
     private final ClassOrInterfaceDeclaration coid;
-    private int wcm;
+    private int wmc;
     private int rfc;
     private int cbo;
     private int lcom;
 
     public ClassMetricsResult(ClassOrInterfaceDeclaration coid) {
         this.coid = coid;
-        this.wcm = 0;
+        this.wmc = 0;
         this.rfc = 0;
         this.cbo = 0;
         this.lcom = 0;
@@ -19,8 +19,8 @@ public class ClassMetricsResult {
         return this.coid;
     }
 
-    public int getWcm() {
-        return this.wcm;
+    public int getWmc() {
+        return this.wmc;
     }
 
     public int getRfc() {
@@ -33,8 +33,8 @@ public class ClassMetricsResult {
         return this.lcom;
     }
 
-    public void setWcm(int wcm) {
-        this.wcm = wcm;
+    public void setWmc(int wmc) {
+        this.wmc = wmc;
     }
 
     public void setRfc(int rfc) {
@@ -48,6 +48,6 @@ public class ClassMetricsResult {
     }
 
     public String toCSVString() {
-        return coid.getNameAsString() + "," + wcm + "," + rfc + "," + cbo + "," + lcom + "\n";
+        return coid.getNameAsString() + "," + wmc + "," + rfc + "," + cbo + "," + lcom + "\n";
     }
 }
