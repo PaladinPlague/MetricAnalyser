@@ -27,6 +27,10 @@ public class Driver {
 
         try(FileWriter output = new FileWriter(outputFile)) {
             for(File subDirectory : directory.listFiles()) {
+                if(!subDirectory.isDirectory()) {
+                    continue;
+                }
+
                 writeAndPrint(output, subDirectory.getName()+"\n");
                 writeAndPrint(output, "Class Name,WCM,RFC,CBO,LCOM\n");
 
@@ -36,7 +40,7 @@ public class Driver {
                     if(f.getName().endsWith(".java")) {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
 
-//                        if(cu.getType(0).getNameAsString().equals("GridView")) {
+//                        if(cu.getType(0).getNameAsString().equals("Simulator")) {
                             LCOMVisitor.visit(cu, resultList);
 
 //                        }
