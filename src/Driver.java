@@ -2,11 +2,8 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.visitor.GenericVisitor;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
 public class Driver {
     private static final String DIRECTORY = "CS409TestSystem2022";
@@ -18,45 +15,52 @@ public class Driver {
     }
 
     public static void analyseDirectory(File directory) {
+        //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
+        GenericVisitor<WMCCReturnType, List<ClassMetricsResult>> WMCComplexVisitor = new WMCComplexVisitor();
+        GenericVisitor<RFCReturnType, List<ClassMetricsResult>> RFCVisitor = new RFCVisitor();
+        GenericVisitor<CBOReturnType, List<ClassMetricsResult>> CBOVisitor = new CBOVisitor();
+        GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
+
+
         File outputFile = new File("output.csv");
 
         try(FileWriter output = new FileWriter(outputFile)) {
-
-
             for(File subDirectory : directory.listFiles()) {
-                writeAndPrint(output, subDirectory.getName()+"\n");
-                writeAndPrint(output, "Class Name,WCM,RFC,CBO,LCOM\n");
+                if(!subDirectory.isDirectory()) {
+                    continue;
+                }
 
-                List<ClassMetricsResult> resultMap = new ArrayList<>();
+                writeAndPrint(output, subDirectory.getName()+"\n");
+                writeAndPrint(output, "Class Name,WMC,WMC_C,RFC,CBO,LCOM\n");
+
+                List<ClassMetricsResult> resultList = new ArrayList<>();
+
+                List<CBOReturnType> allCboResults = new ArrayList<>();
 
                 for(File f : subDirectory.listFiles()) {
-
-
-                    String extension = "";
-                    String fileName = f.getName();
-
-                    int i = fileName.lastIndexOf('.');
-                    if (i > 0) {
-                        extension = fileName.substring(i+1);
-                    }
-
-                    if(extension.equals("java")) {
+                    if(f.getName().endsWith(".java")) {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
 
-                        WMCVisitor.visit(cu, resultMap);
-                        WMCVisitor.visit(cu, resultMap);
+                        WMCVisitor.visit(cu, resultList);
+                        WMCComplexVisitor.visit(cu, resultList);
+                        RFCVisitor.visit(cu,resultList);
+                        allCboResults.add(CBOVisitor.visit(cu, resultList));
+                        LCOMVisitor.visit(cu, resultList);
                     }
 
 
                 }
-                for(ClassMetricsResult cmr : resultMap) {
+
+                CBOReturnType.processResults(allCboResults, resultList);
+
+                for(ClassMetricsResult cmr : resultList) {
                     writeAndPrint(output, cmr.toCSVString());
                 }
                 writeAndPrint(output, "\n");
             }
         } catch (Exception e) {
-            System.out.println("Failed to read directory");
+            System.out.println(e.getMessage());
         }
     }
 
