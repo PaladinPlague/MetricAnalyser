@@ -101,16 +101,16 @@ public class LCOMVisitor extends MetricVisitor<LCOMReturnType> {
 
     @Override
     public LCOMReturnType visit(final FieldDeclaration n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
+        LCOMReturnType toReturn = initialiseEmpty();
         LCOMReturnType result;
 
         for(VariableDeclarator vd : n.getVariables()) {
             result = vd.getName().accept(this, arg);
             if (result != null)
-                toReturn = toReturn.aggregate(result);
+                combineResults(toReturn, result);
         }
 
-        return toReturn.isNonEmpty() ? toReturn : null;
+        return getReturn(toReturn);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class LCOMVisitor extends MetricVisitor<LCOMReturnType> {
 
             result = vd.getInitializer().isPresent() ? vd.getInitializer().get().accept(this, arg) : null;
             if (result != null)
-                toReturn = toReturn.aggregate(result);
+                toReturn = combineResults(toReturn, result);
         }
 
         toReturn.setLocalVars(localVarNames);
@@ -153,12 +153,12 @@ public class LCOMVisitor extends MetricVisitor<LCOMReturnType> {
 
     @Override
     public LCOMReturnType visit(final BlockStmt n, final List<ClassMetricsResult> arg) {
-        LCOMReturnType toReturn = LCOMReturnType.empty();
+        LCOMReturnType toReturn = initialiseEmpty();
         LCOMReturnType result;
 
         result = n.getStatements().accept(this, arg);
         if (result != null)
-            toReturn = toReturn.aggregate(result);
+            toReturn = combineResults(toReturn, result);
 
 
         toReturn.resetLocalVars();

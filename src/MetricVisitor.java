@@ -1,5 +1,6 @@
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.*;
@@ -26,6 +27,28 @@ public abstract class MetricVisitor<R> extends GenericVisitorAdapter<R, List<Cla
             toReturn = combineResults(toReturn, result);
 
         return getReturn(toReturn);
+    }
+
+    @Override
+    public R visit(final ArrayCreationExpr n, final List<ClassMetricsResult> arg) {
+        R toReturn = initialiseEmpty();
+        R result;
+        {
+            result = n.getElementType().accept(this, arg);
+            if (result != null)
+                toReturn = combineResults(toReturn, result);
+        }
+        if (n.getInitializer().isPresent()) {
+            result = n.getInitializer().get().accept(this, arg);
+            if (result != null)
+                toReturn = combineResults(toReturn, result);
+        }
+        {
+            result = n.getLevels().accept(this, arg);
+            if (result != null)
+                toReturn = combineResults(toReturn, result);
+        }
+        return toReturn;
     }
 
     @Override
@@ -74,6 +97,26 @@ public abstract class MetricVisitor<R> extends GenericVisitorAdapter<R, List<Cla
             toReturn = combineResults(toReturn, result);
 
         result = n.getThenExpr().accept(this, arg);
+        if (result != null)
+            toReturn = combineResults(toReturn, result);
+
+        return getReturn(toReturn);
+    }
+
+    @Override
+    public R visit(final ConstructorDeclaration n, final List<ClassMetricsResult> arg) {
+        R toReturn = initialiseEmpty();
+        R result;
+
+        result = n.getBody().accept(this, arg);
+        if (result != null)
+            toReturn = combineResults(toReturn, result);
+
+        result = n.getParameters().accept(this, arg);
+        if (result != null)
+            toReturn = combineResults(toReturn, result);
+
+        result = n.getTypeParameters().accept(this, arg);
         if (result != null)
             toReturn = combineResults(toReturn, result);
 
@@ -275,6 +318,10 @@ public abstract class MetricVisitor<R> extends GenericVisitorAdapter<R, List<Cla
             if (result != null)
                 toReturn = combineResults(toReturn, result);
         }
+
+        result = n.getType().accept(this, arg);
+        if (result != null)
+            toReturn = combineResults(toReturn, result);
 
         result = n.getName().accept(this, arg);
         if (result != null)

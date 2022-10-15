@@ -18,6 +18,7 @@ public class Driver {
         //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
         GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
+        GenericVisitor<CBOReturnType, List<ClassMetricsResult>> CBOVisitor = new CBOVisitor();
 
         File outputFile = new File("output.csv");
 
@@ -32,12 +33,15 @@ public class Driver {
 
                 List<ClassMetricsResult> resultList = new ArrayList<>();
 
+                List<CBOReturnType> allCboResults = new ArrayList<>();
+
                 for(File f : subDirectory.listFiles()) {
                     if(f.getName().endsWith(".java")) {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
 
-//                        if(cu.getType(0).getNameAsString().equals("Simulator")) {
-                            LCOMVisitor.visit(cu, resultList);
+//                        if(cu.getType(0).getNameAsString().equals("Field")) {
+//
+                            allCboResults.add(CBOVisitor.visit(cu, resultList));
 
 //                        }
 
@@ -52,12 +56,16 @@ public class Driver {
 
 
 
-                        //WMCVisitor.visit(cu, resultList);
-//                        WMCVisitor.visit(cu, resultMap);
+//                        allCboResults.add(CBOVisitor.visit(cu, resultList));
+//                        WMCVisitor.visit(cu, resultList);
+//                        LCOMVisitor.visit(cu, resultList);
                     }
 
 
                 }
+
+                CBOReturnType.processResults(allCboResults, resultList);
+
                 for(ClassMetricsResult cmr : resultList) {
                     writeAndPrint(output, cmr.toCSVString());
                 }
