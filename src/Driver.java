@@ -18,9 +18,10 @@ public class Driver {
         //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
         GenericVisitor<Integer, List<ClassMetricsResult>> WMC_complex = new WMC_complex();
-        GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
+        GenericVisitor<RFCReturnType, List<ClassMetricsResult>> RFCVisitor = new RFCVisitor();
         GenericVisitor<CBOReturnType, List<ClassMetricsResult>> CBOVisitor = new CBOVisitor();
-        GenericVisitor<Set<String>, List<ClassMetricsResult>> RFCVisitor = new RFCVisitor();
+        GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
+
 
         File outputFile = new File("output.csv");
 
