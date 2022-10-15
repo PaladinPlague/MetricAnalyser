@@ -19,6 +19,7 @@ public class Driver {
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
         GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
         GenericVisitor<CBOReturnType, List<ClassMetricsResult>> CBOVisitor = new CBOVisitor();
+        GenericVisitor<Set<String>, List<ClassMetricsResult>> RFCVisitor = new RFCVisitor();
 
         File outputFile = new File("output.csv");
 
@@ -47,6 +48,7 @@ public class Driver {
 
 
                         WMCVisitor.visit(cu, resultList);
+                        RFCVisitor.visit(cu,resultList);
                         allCboResults.add(CBOVisitor.visit(cu, resultList));
                         LCOMVisitor.visit(cu, resultList);
                     }

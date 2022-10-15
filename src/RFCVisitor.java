@@ -2,12 +2,9 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.visitor.GenericVisitorAdapter;
 
-import java.sql.Array;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,9 +29,6 @@ public class RFCVisitor extends MetricVisitor<Set<String>> {
 
         Set<String> result = methodsList.accept(this, arg);
         Set<String> called = super.visit(coid, arg);
-        System.out.println(coid.getNameAsString());
-        System.out.println("Method List to check if it appears: " + result + " with a length of " + result.size());
-        System.out.println("Methods that are actually called  : " + called + " with a length of " + called.size());
 
         Iterator<String> allResults = result.iterator();
         Iterator<String> allCalls = called.iterator();
@@ -49,7 +43,6 @@ public class RFCVisitor extends MetricVisitor<Set<String>> {
             }
             allCalls = called.iterator();
         }
-        System.out.println(rfc);
         int foundIndex = -1;
         for(int i=0; i<arg.size(); i++) {
             ClassMetricsResult cmr = arg.get(i);
@@ -64,7 +57,7 @@ public class RFCVisitor extends MetricVisitor<Set<String>> {
             foundIndex = arg.size()-1;
         }
 
-        arg.get(foundIndex).setRfc(rfc + arg.get(foundIndex).getWcm());
+        arg.get(foundIndex).setRfc(rfc + arg.get(foundIndex).getWmc());
 
         return !coid.isInnerClass() ? result : null;
     }
@@ -73,8 +66,13 @@ public class RFCVisitor extends MetricVisitor<Set<String>> {
 
     @Override
     public Set<String> visit(MethodDeclaration md, List<ClassMetricsResult> arg) {
-        super.visit(md, arg);
-        Set<String> s = new HashSet<>();
+        Set<String> result;
+        Set<String> s = initialiseEmpty();
+
+        result = super.visit(md, arg);
+        if(result != null) {
+            s = combineResults(s, result);
+        }
         s.add(md.getNameAsString());
         return s;
     }
@@ -96,11 +94,17 @@ public class RFCVisitor extends MetricVisitor<Set<String>> {
     }
 
     @Override
-    public Set<String> visit(MethodCallExpr calls, List<ClassMetricsResult> arg) {
-        super.visit(calls, arg);
-        Set<String> c = new HashSet<>();
-        c.add(String.valueOf(calls.getName()));
-        return c;
+    public Set<String> visit(MethodCallExpr call, List<ClassMetricsResult> arg) {
+        Set<String> result;
+        Set<String> s = initialiseEmpty();
+
+        result = super.visit(call, arg);
+        if (result != null) {
+            combineResults(s, result);
+        }
+
+        s.add(call.getNameAsString());
+        return s;
     }
 
     protected Set<String> initialiseEmpty() {
