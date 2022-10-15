@@ -41,24 +41,14 @@ public class Driver {
 
 //                        if(cu.getType(0).getNameAsString().equals("Field")) {
 //
-                            allCboResults.add(CBOVisitor.visit(cu, resultList));
+//                            allCboResults.add(CBOVisitor.visit(cu, resultList));
 
 //                        }
 
 
-
-
-
-
-
-
-
-
-
-
-//                        allCboResults.add(CBOVisitor.visit(cu, resultList));
-//                        WMCVisitor.visit(cu, resultList);
-//                        LCOMVisitor.visit(cu, resultList);
+                        WMCVisitor.visit(cu, resultList);
+                        allCboResults.add(CBOVisitor.visit(cu, resultList));
+                        LCOMVisitor.visit(cu, resultList);
                     }
 
 

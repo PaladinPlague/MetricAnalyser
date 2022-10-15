@@ -107,7 +107,7 @@ public class LCOMVisitor extends MetricVisitor<LCOMReturnType> {
         for(VariableDeclarator vd : n.getVariables()) {
             result = vd.getName().accept(this, arg);
             if (result != null)
-                combineResults(toReturn, result);
+                toReturn = combineResults(toReturn, result);
         }
 
         return getReturn(toReturn);

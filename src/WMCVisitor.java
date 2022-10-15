@@ -10,9 +10,12 @@ public class WMCVisitor extends GenericVisitorAdapter<Integer, List<ClassMetrics
     public Integer visit(ClassOrInterfaceDeclaration coid, List<ClassMetricsResult> arg) {
         int result = super.visit(coid, arg);
 
-        Utils.getOrCreateCMRInList(coid, arg).setWmc(result);
+        if(coid.isTopLevelType()) {
+            Utils.getOrCreateCMRInList(coid, arg).setWmc(result);
 
-        return !coid.isInnerClass() ? result : 0;
+        }
+
+        return result;
     }
 
     @Override
@@ -24,16 +27,14 @@ public class WMCVisitor extends GenericVisitorAdapter<Integer, List<ClassMetrics
     @Override
     public Integer visit(NodeList n, List<ClassMetricsResult> arg) {
         int total = 0;
-        boolean hasResult = false;
 
         for (final Object v : n) {
             Integer result = ((Node) v).accept(this, arg);
 
             if (result != null) {
                 total += result;
-                hasResult = true;
             }
         }
-        return hasResult ? total : null;
+        return total != 0 ? total : null;
     }
 }
