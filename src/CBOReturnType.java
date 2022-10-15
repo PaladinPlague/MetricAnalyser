@@ -56,7 +56,7 @@ public class CBOReturnType {
     }
 
     public boolean isNonEmpty() {
-        return classesUsed.size() > 0;
+        return classesUsed.size() > 0 || this.associatedCoid != null;
     }
 
     public void removeInnerClass(String name) {

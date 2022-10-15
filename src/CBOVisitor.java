@@ -39,7 +39,7 @@ public class CBOVisitor extends MetricVisitor<CBOReturnType> {
 
         toReturn.setAssociatedCoid(n);
 
-        return getReturn(toReturn);
+        return toReturn;
     }
 
     @Override
