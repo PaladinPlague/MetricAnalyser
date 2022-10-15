@@ -17,7 +17,7 @@ public class Driver {
     public static void analyseDirectory(File directory) {
         //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
-        GenericVisitor<Integer, List<ClassMetricsResult>> WMC_complex = new WMC_complex();
+        GenericVisitor<WMCCReturnType, List<ClassMetricsResult>> WMCComplexVisitor = new WMCComplexVisitor();
         GenericVisitor<RFCReturnType, List<ClassMetricsResult>> RFCVisitor = new RFCVisitor();
         GenericVisitor<CBOReturnType, List<ClassMetricsResult>> CBOVisitor = new CBOVisitor();
         GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
@@ -43,7 +43,7 @@ public class Driver {
                         CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
 
                         WMCVisitor.visit(cu, resultList);
-                        WMC_complex.visit(cu, resultList);
+                        WMCComplexVisitor.visit(cu, resultList);
                         RFCVisitor.visit(cu,resultList);
                         allCboResults.add(CBOVisitor.visit(cu, resultList));
                         LCOMVisitor.visit(cu, resultList);
