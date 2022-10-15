@@ -39,7 +39,7 @@ public class Driver {
 
                 for(File f : subDirectory.listFiles()) {
                     if(f.getName().endsWith(".java")) {
-                        CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f))
+                        CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
 
                         WMCVisitor.visit(cu, resultList);
                         WMC_complex.visit(cu, resultList);
