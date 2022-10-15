@@ -17,6 +17,7 @@ public class Driver {
     public static void analyseDirectory(File directory) {
         //Instantiate visitors
         GenericVisitor<Integer, List<ClassMetricsResult>> WMCVisitor = new WMCVisitor();
+        GenericVisitor<Integer, List<ClassMetricsResult>> WMC_complex = new WMC_complex();
         GenericVisitor<LCOMReturnType, List<ClassMetricsResult>> LCOMVisitor = new LCOMVisitor();
         GenericVisitor<CBOReturnType, List<ClassMetricsResult>> CBOVisitor = new CBOVisitor();
         GenericVisitor<Set<String>, List<ClassMetricsResult>> RFCVisitor = new RFCVisitor();
@@ -30,7 +31,7 @@ public class Driver {
                 }
 
                 writeAndPrint(output, subDirectory.getName()+"\n");
-                writeAndPrint(output, "Class Name,WMC,RFC,CBO,LCOM\n");
+                writeAndPrint(output, "Class Name,WMC,WMC_C,RFC,CBO,LCOM\n");
 
                 List<ClassMetricsResult> resultList = new ArrayList<>();
 
@@ -38,16 +39,10 @@ public class Driver {
 
                 for(File f : subDirectory.listFiles()) {
                     if(f.getName().endsWith(".java")) {
-                        CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f));
-
-//                        if(cu.getType(0).getNameAsString().equals("Field")) {
-//
-//                            allCboResults.add(CBOVisitor.visit(cu, resultList));
-
-//                        }
-
+                        CompilationUnit cu = StaticJavaParser.parse(new FileInputStream(f))
 
                         WMCVisitor.visit(cu, resultList);
+                        WMC_complex.visit(cu, resultList);
                         RFCVisitor.visit(cu,resultList);
                         allCboResults.add(CBOVisitor.visit(cu, resultList));
                         LCOMVisitor.visit(cu, resultList);
