@@ -2,6 +2,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.AnnotationDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.Statement;
@@ -15,11 +16,13 @@ import java.util.List;
 public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetricsResult>> {
 
     public Integer visit(ClassOrInterfaceDeclaration coid, List<ClassMetricsResult> arg) {
-		int total = 0;
 		Integer result;
 
         result = super.visit(coid, arg);
 
+        if(!coid.isTopLevelType()) {
+        	return result;
+        }
         int foundIndex = -1;
         for(int i=0; i<arg.size(); i++) {
             ClassMetricsResult cmr = arg.get(i);
@@ -38,17 +41,20 @@ public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetric
 
         return result;
     }
+    
+    @Override
+    public Integer visit(ConstructorDeclaration cd, List<ClassMetricsResult> arg) {
+    	return 0;
+    }
 
-//	@Override
-//    public Integer visit(MethodDeclaration md, List<ClassMetricsResult> arg) {
-//        super.visit(md, arg);
-//        int value = 1;
-//        for(IfStmt ifStmt: md.getChildNodesByType(IfStmt.class)) {
-//        	value ++;
-//        	Expression condExpr = ifStmt.getCondition();
-//        }
-//        return value;
-//    }
+	@Override
+    public Integer visit(MethodDeclaration md, List<ClassMetricsResult> arg) {
+		if(super.visit(md, arg) != null) {
+			return super.visit(md, arg) + 1;
+		}
+		else
+			return 1;
+    }
 	
 	@Override 
 	public Integer visit(IfStmt n, List<ClassMetricsResult> arg) {
@@ -72,7 +78,7 @@ public class WMC_complex extends GenericVisitorAdapter<Integer, List<ClassMetric
 			total += result; 
 		}
 		
-		return total; 
+		return total + 1; 
 	}
 	
 	@Override
