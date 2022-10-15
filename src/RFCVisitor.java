@@ -29,8 +29,9 @@ public class RFCVisitor extends GenericVisitorAdapter<Set<String>, List<ClassMet
 
         Set<String> result = methodsList.accept(this, arg);
         int noMethods = result.size();
-        //System.out.println(coid.getNameAsString() + " has "+ result + " and has " + noMethods + " Methods");
-        System.out.println(allMembers);
+
+
+        super.visit(coid.getMethods(), arg);
 
         int foundIndex = -1;
         for(int i=0; i<arg.size(); i++) {
@@ -50,6 +51,8 @@ public class RFCVisitor extends GenericVisitorAdapter<Set<String>, List<ClassMet
 
         return !coid.isInnerClass() ? result : null;
     }
+
+
 
     @Override
     public Set<String> visit(MethodDeclaration md, List<ClassMetricsResult> arg) {
@@ -74,4 +77,13 @@ public class RFCVisitor extends GenericVisitorAdapter<Set<String>, List<ClassMet
         }
         return hasResult ? total : null;
     }
+
+
+    @Override
+    public Set<String> visit(MethodCallExpr calls, List<ClassMetricsResult> arg) {
+        super.visit(calls, arg);
+
+        return null;
+    }
+
 }
